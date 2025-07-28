@@ -80,7 +80,7 @@ Each input image can optionally go through:
 Launch an interactive UI for image classification:
 
 ```bash
-python your_script.py
+python ImageEnhancement.py
 ```
 
 Or use in Colab:
