@@ -1,6 +1,6 @@
 # ===== Colab Setup: Install dependencies =====
 # Run this cell first to install all required libraries
-!pip install --upgrade torch torchvision gradio opencv-python scikit-learn matplotlib
+#!pip install --upgrade torch torchvision gradio opencv-python scikit-learn matplotlib
 
 # ===== Imports =====
 import torch
