@@ -1,128 +1,169 @@
 # CIFAR-10 Image Classifier with DIP Enhancement and Gradio UI
 
-This project is a comprehensive image classification pipeline that combines deep learning with Digital Image Processing (DIP) techniques to classify images from the [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) dataset. It includes training a fine-tuned ResNet-50 model, applying image preprocessing techniques like segmentation and edge detection, and deploying a Gradio-based web interface for live prediction.
+A modular computer vision project that fine-tunes a ResNet-50 model on CIFAR-10 and compares standard classification with Digital Image Processing (DIP) enhanced inputs.
+
+This project began as a Computer Vision course project and is being refactored into a cleaner ML engineering portfolio project with separate training, evaluation, preprocessing, model, and Gradio inference modules.
 
 ---
 
-## 🌍 Live Demo
+## Highlights
 
-You can launch a live demo using the [Gradio](https://www.gradio.app/) interface at the end of the script.
-
----
-
-## 🔧 Features
-
-* Deep learning with ResNet-50
-* Data augmentation and normalization using torchvision
-* DIP-based preprocessing (histogram equalization, segmentation, morphology)
-* Metric plotting and model evaluation (Accuracy, F1, Confusion Matrix)
-* Gradio UI for user-friendly image prediction
+- Fine-tunes a pretrained ResNet-50 model on CIFAR-10.
+- Uses torchvision augmentation and ImageNet normalization.
+- Includes DIP preprocessing with histogram equalization, segmentation, edge detection, and morphology helpers.
+- Evaluates accuracy, weighted F1, and classification reports.
+- Provides a Gradio interface for interactive prediction.
+- Keeps training, evaluation, and app launch separate for better maintainability.
 
 ---
 
-## 📚 Project Structure
+## Current Result
 
-* `enhance_image` / `segment_image`: Basic DIP techniques
-* `train_transform`, `dip_test_transform`: Image preprocessing pipelines
-* `main()`: Full model training and evaluation logic
-* `predict()`: Gradio-compatible prediction logic
-* `evaluate_model()`, `visualize_predictions()`: Metrics and visual outputs
+| Experiment | Result |
+|---|---:|
+| Best validation accuracy | 84.27% |
+| Dataset | CIFAR-10 |
+| Model | Fine-tuned ResNet-50 |
+
+The original project reached a best validation accuracy of **84.27%** after 39 epochs. More detailed raw-vs-DIP evaluation metrics should be added after rerunning the refactored pipeline.
 
 ---
 
-## 🚀 Getting Started
+## Project Structure
 
-### 1. Clone the Repository
+```text
+Image_Classifier/
+├── src/
+│   ├── __init__.py
+│   ├── app.py
+│   ├── config.py
+│   ├── data_loaders.py
+│   ├── datasets.py
+│   ├── dip.py
+│   ├── evaluate.py
+│   ├── model.py
+│   └── train.py
+├── models/
+│   └── .gitkeep
+├── results/
+│   └── .gitkeep
+├── ImageEnhancement.py
+├── LICENSE
+├── README.md
+├── requirements.txt
+└── .gitignore
+```
+
+> `ImageEnhancement.py` is now a compatibility entrypoint. New development should use the modules inside `src/`.
+
+---
+
+## Installation
 
 ```bash
-https://github.com/MerveilleDivine/Image_Classifier.git
+git clone https://github.com/MerveilleDivine/Image_Classifier.git
 cd Image_Classifier
+pip install -r requirements.txt
 ```
 
-### 2. Install Dependencies
+For GPU training, install a PyTorch build that matches your CUDA setup from the official PyTorch instructions.
 
-Use Google Colab (recommended) or install locally:
+---
+
+## Train
 
 ```bash
-pip install --upgrade torch torchvision gradio opencv-python scikit-learn matplotlib
+python -m src.train
+```
+
+Optional quick test run:
+
+```bash
+python -m src.train --epochs 1 --batch-size 64
+```
+
+The best checkpoint is saved to:
+
+```text
+models/best_resnet50_cifar10.pth
 ```
 
 ---
 
-## 🔬 How It Works
+## Evaluate
 
-### DIP Pipeline
+```bash
+python -m src.evaluate --checkpoint models/best_resnet50_cifar10.pth
+```
 
-Each input image can optionally go through:
-
-* Gaussian blur + Histogram Equalization (Contrast)
-* Otsu's Threshold-based Segmentation
-* Morphological Opening to clean noise
-
-### Training Workflow
-
-1. Loads CIFAR-10 dataset (original and DIP-enhanced test set)
-2. Applies heavy data augmentation during training
-3. Fine-tunes a pretrained ResNet-50 on CIFAR-10
-4. Tracks metrics, saves best model, and evaluates both original and DIP-enhanced test sets
-5. Visualizes training loss/accuracy curves and sample predictions
+The evaluation command reports accuracy, weighted F1, and a per-class classification report on both the original and DIP-enhanced CIFAR-10 test sets.
 
 ---
 
-## 📊 Model Performance
+## Run the Gradio App
 
-> Note: Actual metrics are printed after training completes.
+```bash
+python -m src.app --checkpoint models/best_resnet50_cifar10.pth
+```
 
----
-
-## 📷 Gradio Inference
-
-Launch an interactive UI for image classification:
+Or use the legacy compatibility entrypoint:
 
 ```bash
 python ImageEnhancement.py
 ```
 
-Or use in Colab:
-
-```python
-# At the end of the notebook
-Interface.launch(share=True)
-```
-
-### Inputs:
-
-* Upload an image (32x32 CIFAR-10 format)
-* Optionally apply DIP preprocessing
-
-### Outputs:
-
-* Top 3 predicted classes with confidence scores
+If the checkpoint is missing, the app now shows a clear error instead of failing silently.
 
 ---
 
-## 🩼 Credits
+## DIP Pipeline
 
-Developed by Mervine Muganguzi.
-Inspired by academic research on image enhancement and its effect on classification accuracy.
+The preprocessing module includes:
 
----
+- Gaussian blur
+- Histogram equalization
+- Otsu threshold-based segmentation
+- Morphological cleanup
+- Canny or Sobel edge detection helpers
 
-## 🌟 TODO / Improvements
-
-* Support for custom datasets
-* Export trained model to ONNX
-* Add adversarial robustness testing
-* Improve segmentation accuracy
+The DIP transform can be used during evaluation or toggled in the Gradio app.
 
 ---
 
-## 🚫 Disclaimer
+## Engineering Notes
 
-This project is meant for educational and experimental purposes. CIFAR-10 images are low-resolution and results may vary in real-world tasks.
+This refactor intentionally separates responsibilities:
+
+| Module | Responsibility |
+|---|---|
+| `src/config.py` | shared paths, constants, class names, training defaults |
+| `src/dip.py` | image enhancement and segmentation helpers |
+| `src/data_loaders.py` | CIFAR-10 datasets, transforms, and loaders |
+| `src/model.py` | ResNet-50 construction and checkpoint loading |
+| `src/train.py` | training loop and checkpoint saving |
+| `src/evaluate.py` | evaluation metrics and reports |
+| `src/app.py` | Gradio inference UI |
 
 ---
 
-## ✈️ License
+## Limitations
+
+- CIFAR-10 images are low-resolution, so real-world image performance may differ.
+- The trained checkpoint is not committed to GitHub because model artifacts can be large.
+- Raw-vs-DIP comparison metrics should be rerun and documented after the refactor.
+
+---
+
+## Future Improvements
+
+- Add lightweight unit tests for DIP functions and inference transforms.
+- Add a Python CI workflow for syntax checks.
+- Export the model to ONNX.
+- Add CSV/JSON evaluation reports.
+- Add confusion matrix and prediction-sample images to the README.
+
+---
+
+## License
 
 This repository is licensed under the MIT License. See [LICENSE](LICENSE) for details.
