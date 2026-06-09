@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 import torch
 import torch.nn as nn
@@ -10,13 +11,12 @@ from .config import (
     CHECKPOINT_PATH,
     LABEL_SMOOTHING,
     LEARNING_RATE,
-    MODEL_DIR,
     NUM_EPOCHS,
     WEIGHT_DECAY,
 )
 from .data_loaders import get_cifar10_loaders
 from .evaluate import evaluate_model
-from .model import build_model
+from .model import build_model, load_checkpoint
 
 
 def plot_metrics(train_losses, val_losses, train_accuracies, val_accuracies):
@@ -40,7 +40,9 @@ def plot_metrics(train_losses, val_losses, train_accuracies, val_accuracies):
 
 
 def train(args):
-    MODEL_DIR.mkdir(parents=True, exist_ok=True)
+    checkpoint_path = Path(args.checkpoint)
+    checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Device:", device)
 
@@ -103,11 +105,15 @@ def train(args):
 
         if val_accuracy > best_accuracy:
             best_accuracy = val_accuracy
-            torch.save(model.state_dict(), args.checkpoint)
+            torch.save(model.state_dict(), str(checkpoint_path))
             print(f"Saved best model with validation accuracy {best_accuracy * 100:.2f}%")
 
     if args.plot:
         plot_metrics(train_losses, val_losses, train_accuracies, val_accuracies)
+
+    print("\nLoading best checkpoint for final evaluation...")
+    model = load_checkpoint(model, checkpoint_path=checkpoint_path, map_location=device)
+    model.to(device)
 
     print("\n===== Evaluation on Original Test Set =====")
     evaluate_model(model, test_loader, train_ds.classes, device)
