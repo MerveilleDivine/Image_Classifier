@@ -6,6 +6,8 @@ __pycache__/
 data/
 outputs/*
 !outputs/.gitkeep
+results/*
+!results/.gitkeep
 models/*
 !models/.gitkeep
 runs/
